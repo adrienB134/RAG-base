@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>RAG Chatbot</title>
+    <style>
+        :root {
+            --primary-color: #a0a0a0;
+            --background-color: #1a1a1a;
+            --card-background: #2d2d2d;
+            --text-color: #e0e0e0;
+            --border-radius: 6px;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --input-background: #363636;
+            --input-border: #404040;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .chat-container {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            height: 700px;
+            overflow-y: auto;
+            margin-bottom: 1.5rem;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--input-border);
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 4px;
+            max-width: 70%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background-color: #808080;
+            margin-left: auto;
+            color: #ffffff;
+            box-shadow: 0 2px 4px rgba(128, 128, 128, 0.2);
+        }
+
+        .bot-message {
+            background-color: #363636;
+            margin-right: auto;
+            color: #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .input-container {
+            display: flex;
+            gap: 12px;
+            padding: 1rem;
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .nav {
+            background: var(--card-background);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+        }
+
+        .nav a {
+            margin-right: 20px;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .nav a:hover {
+            background: #363636;
+        }
+
+        #messageInput {
+            flex-grow: 1;
+            padding: 12px;
+            border: 2px solid var(--input-border);
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--input-background);
+            color: var(--text-color);
+        }
+
+        #messageInput:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(114, 137, 218, 0.1);
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #909090;
+            transform: translateY(-2px);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Scrollbar styling */
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: #363636;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: #5a5a5a;
+        }
+
+        /* Add these new styles */
+        .main-container {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 100px);
+            /* Adjust for nav and padding */
+        }
+
+        .chat-card {
+            flex: 3;
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            margin: 1rem 0;
+            display: flex;
+            flex-direction: column;
+            height: fit-content;
+        }
+
+        .sources-card {
+            flex: 1;
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            margin: 1rem 0;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            height: auto;
+        }
+
+        .source-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: var(--input-background);
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            border: 1px solid var(--input-border);
+        }
+
+        .sources-title {
+            color: var(--text-color);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--input-border);
+        }
+
+        #sourcesContainer {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="nav">
+        <a href="/">Upload</a>
+        <a href="/chat">Chat</a>
+    </div>
+    <div class="main-container">
+        <div class="chat-card">
+            <div class="logo-container">
+                <img src="./static/Matriv-white.png" alt="Matriv Logo" style="width: 100px; height: auto;">
+            </div>
+            <div class="chat-container" id="chatContainer">
+            </div>
+            <div class="input-container">
+                <input type="text" id="messageInput" placeholder="Type your message...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+        <div class="sources-card">
+            <h2 class="sources-title">Sources</h2>
+            <div id="sourcesContainer"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sourcesContainer = document.getElementById('sourcesContainer');
+
+        function addMessage(message, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            messageDiv.textContent = message;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function updateSources(sources) {
+            sourcesContainer.innerHTML = '';
+            if (sources && sources.length > 0) {
+                sources.forEach(source => {
+                    const sourceDiv = document.createElement('div');
+                    sourceDiv.className = 'source-item';
+                    sourceDiv.textContent = source;
+                    sourcesContainer.appendChild(sourceDiv);
+                });
+            }
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            messageInput.value = '';
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: message }),
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    addMessage(data.error, false);
+                    return;
+                }
+
+                // Create a temporary div to render markdown
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = marked.parse(data.answer[0]);
+
+                // Create message div with markdown content
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot-message';
+                messageDiv.innerHTML = tempDiv.innerHTML;
+
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                // Update sources if they exist in the response
+                if (data.answer[1]) {
+                    updateSources(data.answer[1]);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('Sorry, there was an error processing your message.', false);
+            }
+        }
+
+        messageInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+
+</html>

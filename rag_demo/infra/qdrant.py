@@ -2,8 +2,6 @@ from loguru import logger
 from qdrant_client import QdrantClient
 from qdrant_client.http.exceptions import UnexpectedResponse
 
-from rag_demo.settings import settings
-
 
 class QdrantDatabaseConnector:
     _instance: QdrantClient | None = None
@@ -11,25 +9,12 @@ class QdrantDatabaseConnector:
     def __new__(cls, *args, **kwargs) -> QdrantClient:
         if cls._instance is None:
             try:
-                if settings.USE_QDRANT_CLOUD:
-                    cls._instance = QdrantClient(
-                        url=settings.QDRANT_CLOUD_URL,
-                        api_key=settings.QDRANT_APIKEY,
-                    )
+                cls._instance = QdrantClient(":memory:")
 
-                    uri = settings.QDRANT_CLOUD_URL
-                else:
-                    cls._instance = QdrantClient(":memory:")
-
-                    uri = f"{settings.QDRANT_DATABASE_HOST}:{settings.QDRANT_DATABASE_PORT}"
-
-                logger.info(f"Connection to Qdrant DB with URI successful: {uri}")
-            except UnexpectedResponse:
+                logger.info(f"Connection to Qdrant DB with URI successful")
+            except:
                 logger.exception(
                     "Couldn't connect to Qdrant.",
-                    host=settings.QDRANT_DATABASE_HOST,
-                    port=settings.QDRANT_DATABASE_PORT,
-                    url=settings.QDRANT_CLOUD_URL,
                 )
 
                 raise

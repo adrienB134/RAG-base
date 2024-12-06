@@ -1,52 +1,26 @@
-import re
+from uuid import uuid4
 
-from langchain.text_splitter import (
-    RecursiveCharacterTextSplitter,
-    SentenceTransformersTokenTextSplitter,
-    TokenTextSplitter,
-)
-
-from llm_engineering.application.networks import EmbeddingModelSingleton
-
-embedding_model = EmbeddingModelSingleton()
+from langchain.text_splitter import MarkdownTextSplitter
+from rag_demo.preprocessing.base import Chunk
+from rag_demo.preprocessing.base import Document
 
 
-def chunk_text(text: str, chunk_size: int = 500, chunk_overlap: int = 50) -> list[str]:
-    character_splitter = RecursiveCharacterTextSplitter(
-        separators=["\n\n"], chunk_size=chunk_size, chunk_overlap=0
+def chunk_text(
+    document: Document, chunk_size: int = 500, chunk_overlap: int = 50
+) -> list[Chunk]:
+    text_splitter = MarkdownTextSplitter(
+        chunk_size=chunk_size, chunk_overlap=chunk_overlap
     )
-    text_split_by_characters = character_splitter.split_text(text)
+    chunks = text_splitter.split_text(document.text)
+    result = []
+    for chunk in chunks:
+        result.append(
+            Chunk(
+                content=chunk,
+                document_id=document.document_id,
+                chunk_id=uuid4(),
+                metadata=document.metadata,
+            )
+        )
 
-    token_splitter = SentenceTransformersTokenTextSplitter(
-        chunk_overlap=chunk_overlap,
-        tokens_per_chunk=embedding_model.max_input_length,
-        model_name=embedding_model.model_id,
-    )
-    chunks_by_tokens = []
-    for section in text_split_by_characters:
-        chunks_by_tokens.extend(token_splitter.split_text(section))
-
-    return chunks_by_tokens
-
-
-def chunk_article(text: str, min_length: int, max_length: int) -> list[str]:
-    sentences = re.split(r"(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|\!)\s", text)
-
-    extracts = []
-    current_chunk = ""
-    for sentence in sentences:
-        sentence = sentence.strip()
-        if not sentence:
-            continue
-
-        if len(current_chunk) + len(sentence) <= max_length:
-            current_chunk += sentence + " "
-        else:
-            if len(current_chunk) >= min_length:
-                extracts.append(current_chunk.strip())
-            current_chunk = sentence + " "
-
-    if len(current_chunk) >= min_length:
-        extracts.append(current_chunk.strip())
-
-    return extracts
+    return result

@@ -1,9 +1,9 @@
 from abc import ABC
 from typing import Optional
 
-from pydantic import UUID4
+from pydantic import UUID4, BaseModel
 
-from .base import VectorBaseDocument
+from .vectordb import VectorBaseDocument
 
 
 class CleanedDocument(VectorBaseDocument, ABC):
@@ -11,3 +11,9 @@ class CleanedDocument(VectorBaseDocument, ABC):
     doc_id: UUID4
     doc_title: str
     # doc_url: str
+
+
+class Document(BaseModel):
+    text: str
+    document_id: UUID4
+    metadata: dict

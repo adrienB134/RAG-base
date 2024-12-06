@@ -15,6 +15,8 @@ from rag_demo.infra.qdrant import connection
 
 T = TypeVar("T", bound="VectorBaseDocument")
 
+EMBEDDING_SIZE = 1024
+
 
 class VectorBaseDocument(BaseModel, Generic[T], ABC):
     id: UUID4 = Field(default_factory=uuid.uuid4)
@@ -80,7 +82,12 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
     def bulk_insert(cls: Type[T], documents: list["VectorBaseDocument"]) -> bool:
         try:
             cls._bulk_insert(documents)
-        except exceptions.UnexpectedResponse:
+            logger.info(
+                f"Successfully inserted {len(documents)} documents into {cls.get_collection_name()}"
+            )
+
+        except Exception as e:
+            logger.error(f"Error inserting documents: {e}")
             logger.info(
                 f"Collection '{cls.get_collection_name()}' does not exist. Trying to create the collection and reinsert the documents."
             )
@@ -89,7 +96,8 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
 
             try:
                 cls._bulk_insert(documents)
-            except exceptions.UnexpectedResponse:
+            except Exception as e:
+                logger.error(f"Error inserting documents: {e}")
                 logger.error(
                     f"Failed to insert documents in '{cls.get_collection_name()}'."
                 )
@@ -193,7 +201,9 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
     def create_collection(cls: Type[T]) -> bool:
         collection_name = cls.get_collection_name()
         use_vector_index = cls.get_use_vector_index()
-
+        logger.info(
+            f"Creating collection {collection_name} with use_vector_index={use_vector_index}"
+        )
         return cls._create_collection(
             collection_name=collection_name, use_vector_index=use_vector_index
         )
@@ -203,9 +213,7 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
         cls, collection_name: str, use_vector_index: bool = True
     ) -> bool:
         if use_vector_index is True:
-            vectors_config = VectorParams(
-                size=EmbeddingModelSingleton().embedding_size, distance=Distance.COSINE
-            )
+            vectors_config = VectorParams(size=EMBEDDING_SIZE, distance=Distance.COSINE)
         else:
             vectors_config = {}
 
@@ -214,21 +222,10 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
         )
 
     @classmethod
-    def get_category(cls: Type[T]) -> DataCategory:
-        if not hasattr(cls, "Config") or not hasattr(cls.Config, "category"):
-            raise ImproperlyConfigured(
-                "The class should define a Config class with"
-                "the 'category' property that reflects the collection's data category."
-            )
-
-        return cls.Config.category
-
-    @classmethod
     def get_collection_name(cls: Type[T]) -> str:
         if not hasattr(cls, "Config") or not hasattr(cls.Config, "name"):
-            raise ImproperlyConfigured(
-                "The class should define a Config class with"
-                "the 'name' property that reflects the collection's name."
+            raise Exception(
+                f"The class {cls} should define a Config class with the 'name' property that reflects the collection's name."
             )
 
         return cls.Config.name
@@ -245,12 +242,6 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
         cls: Type["VectorBaseDocument"], documents: list["VectorBaseDocument"]
     ) -> Dict["VectorBaseDocument", list["VectorBaseDocument"]]:
         return cls._group_by(documents, selector=lambda doc: doc.__class__)
-
-    @classmethod
-    def group_by_category(
-        cls: Type[T], documents: list[T]
-    ) -> Dict[DataCategory, list[T]]:
-        return cls._group_by(documents, selector=lambda doc: doc.get_category())
 
     @classmethod
     def _group_by(
@@ -274,7 +265,7 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
             try:
                 if subclass.get_collection_name() == collection_name:
                     return subclass
-            except ImproperlyConfigured:
+            except Exception:
                 pass
 
             try:

@@ -1,0 +1,1 @@
+mkdir rag_demo/templates 

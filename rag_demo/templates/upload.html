@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>PDF Upload</title>
+    <style>
+        :root {
+            --primary-color: #a0a0a0;
+            --background-color: #1a1a1a;
+            --card-background: #2d2d2d;
+            --text-color: #e0e0e0;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .upload-form {
+            border: 2px dashed #404040;
+            padding: 2rem;
+            text-align: center;
+            margin: 1.5rem 0;
+            border-radius: var(--border-radius);
+            background: #363636;
+            transition: all 0.3s ease;
+        }
+
+        .upload-form:hover {
+            border-color: var(--primary-color);
+            background: #404040;
+        }
+
+        .nav {
+            background: var(--card-background);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .nav a {
+            margin-right: 20px;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .nav a:hover {
+            background: #363636;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-label:hover {
+            background: #909090;
+        }
+
+        .selected-file {
+            margin-top: 1rem;
+            color: #b0b0b0;
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        button:hover {
+            background: #909090;
+            transform: translateY(-2px);
+        }
+
+        .status-message {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .success {
+            background: #2e4a3d;
+            color: #7ee2b8;
+        }
+
+        .error {
+            background: #4a2e2e;
+            color: #e27e7e;
+        }
+
+        .loading-placeholder {
+            display: none;
+            margin-top: 1rem;
+            color: #b0b0b0;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.6;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="nav">
+        <a href="/">Upload</a>
+        <a href="/chat">Chat</a>
+    </div>
+    <div class="card">
+        <h1>Upload Documents</h1>
+        <div class="upload-form">
+            <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+                <label for="file-upload" class="file-upload-label">
+                    Choose PDF Files
+                </label>
+                <input id="file-upload" type="file" name="file" accept=".pdf" multiple onchange="updateFileName(this)">
+                <div id="selectedFile" class="selected-file"></div>
+                <div id="loadingPlaceholder" class="loading-placeholder">Processing file...</div>
+                <button type="submit" onclick="showLoading()">Upload</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function updateFileName(input) {
+            const fileNames = Array.from(input.files)
+                .map(file => file.name)
+                .join(', ');
+            document.getElementById('selectedFile').textContent = fileNames || 'No file selected';
+        }
+
+        function showLoading() {
+            if (document.getElementById('file-upload').files.length > 0) {
+                document.getElementById('selectedFile').style.display = 'none';
+                document.getElementById('loadingPlaceholder').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+
+</html>
