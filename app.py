@@ -6,7 +6,7 @@ from pydantic import BaseModel
 import os
 from rag_demo.pipeline import process_pdf
 import nest_asyncio
-from rag.retriever import RAGPipeline
+from rag_demo.rag.retriever import RAGPipeline
 from loguru import logger
 
 app = FastAPI()
@@ -78,4 +78,4 @@ async def chat(chat_request: ChatRequest):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=7860)

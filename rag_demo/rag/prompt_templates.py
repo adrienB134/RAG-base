@@ -31,7 +31,7 @@ class AnswerGenerationTemplate(PromptTemplateFactory):
     Context: {context}
     Question: {question}
 
-    Give your answer in markdown format.
+    Give your answer in markdown format if needed, for example if a table is the best way to answer the question, or if titles and subheadings are needed.
     Give only your answer, do not include any other text like 'Certainly! Here is the answer:' or 'The answer is:' or anything similar."""
 
     def create_template(self, context: str, question: str) -> str:
