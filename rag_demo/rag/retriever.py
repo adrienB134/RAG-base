@@ -129,5 +129,9 @@ class RAGPipeline:
         reranked_docs = self.rerank(query, docs, keep_top_k=10)
         return (
             self.generate_answer(query, reranked_docs),
-            [doc.metadata["filename"].split(".pdf")[0] for doc in reranked_docs],
+            list(
+                set(
+                    [doc.metadata["filename"].split(".pdf")[0] for doc in reranked_docs]
+                )
+            ),
         )
